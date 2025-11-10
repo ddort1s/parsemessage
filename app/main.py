@@ -1,29 +1,12 @@
-from fastapi import FastAPI
-from pydantic import BaseModel, Field, field_validator
+from fastapi import FastAPI, Query
+from .models import FeedBack
 
 app = FastAPI()
 
-feedbacks = []
-
-class Feedback(BaseModel):
-    name: str = Field(..., min_length=2, max_length=50)
-    message: str = Field(..., min_length=10, max_length=500)
-
-    @field_validator("message")
-    def check_forbidden_words(cls, value):
-        forbidden_words = ["редис", "бяк", "козяв"]
-
-        # Приводим сообщение к нижнему регистру для корректной проверки
-        lower_value = value.lower()
-
-        # Проверяем наличие каждого запрещённого слова
-        for word in forbidden_words:
-            if word in lower_value:
-                raise ValueError("Использование недопустимых слов")
-        return value
-
-
+fake_data_base = []
 @app.post("/feedback")
-async def create_feedback(feedback: Feedback):
-    feedbacks.append(feedback.dict())
-    return {"message": f"Спасибо, {feedback.name}! Ваш отзыв сохранён."}
+async def Feedback(fb: FeedBack, is_premium:bool = Query(None)):
+    fake_data_base.append({"name": fb.name, "message": fb.message, "email": fb.contact.email, "phone": fb.contact.phone, "is_premium": is_premium})
+    if is_premium==True: 
+        return {"message": f"Спасибо, {fb.name}! Ваш отзыв сохранен. Ваш отзыв будет рассмотрен в приоритетном порядке."}
+    return {"message": f"Спасибо, {fb.name}! Ваш отзыв сохранен"}
